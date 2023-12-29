@@ -262,7 +262,7 @@ def main():
    # NLP Analysis tab
     elif selected_tab == 'NLP Analysis':
         # NLP analysis on comments
-        comments_query = st.text_input("Enter SQL Query for Comments:", "SELECT * FROM comments where video_id = 'video_id'")
+        comments_query = st.text_input("Enter SQL Query for Comments:", "SELECT * FROM comments where video_id = 'E-RJbdTJX-4'")
         # Integrate sentiment analysis using transformers pipeline
         comments_result = visualise.sql_query(comments_query)
 
