@@ -1,0 +1,9 @@
+streamlit
+pandas
+pymongo
+google-api-python-client
+isodate
+transformers
+matplotlib
+transformers[sentencepiece]
+pyngrok
