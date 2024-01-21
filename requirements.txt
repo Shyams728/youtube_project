@@ -8,3 +8,4 @@ transformers[sentencepiece]
 pyngrok
 extra_streamlit_components
 plotly
+streamlit_shadcn_ui
