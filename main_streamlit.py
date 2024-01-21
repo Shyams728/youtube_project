@@ -73,7 +73,7 @@ def main():
     selected_tab = tab_bar(data=[
     TabBarItemData(id='Main', title="Main", description="About the project and input"),
     TabBarItemData(id= 'Tables', title="Tables", description="view the data"),
-    TabBarItemData(id='Visualisation', title="Visualisation", description="Some charts "),
+    TabBarItemData(id='Visualisation', title="Visualisation", description="Overview "),
     TabBarItemData(id='NLP Analysis', title="NLP Analysis", description="translation and sentiment of the comments"),], default='Main')
     # st.info(f"{selected_tab=}")
 
@@ -269,7 +269,7 @@ def main():
         st.subheader('Top 10 channels by subscription count')
 
         display_box_df_charts = st.container(border=True)
-        df_col, charts_col = display_box_df_charts.columns([1, 3])
+        df_col, charts_col = display_box_df_charts.columns([2, 3])
 
         with df_col:
             table(data=result_top_channels, maxHeight=500, key="result_top_channels")
