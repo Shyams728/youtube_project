@@ -34,7 +34,7 @@ class YouTubeDataPipeline:
             print(f"Error making YouTube API request: {e}")
             return None
 
-    def get_channel_data(self, channel_id):
+    def get_channel_info(self, channel_id):
         api_function = self.youtube.channels().list(
             part="snippet,statistics,contentDetails", id=channel_id)
         channel_response = self.make_youtube_api_request(api_function)
@@ -88,7 +88,7 @@ class YouTubeDataPipeline:
                 return video_ids
         return []
 
-    def get_youtube_videos_info(self, channel_id):
+    def get_videos_info(self, channel_id):
         channel_response = self.youtube.channels().list(part="snippet,statistics,contentDetails", id=channel_id).execute()
         playlist_id = channel_response["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
 
@@ -284,7 +284,7 @@ class YouTubeDataPipeline:
         )
         sqlite_cursor.execute(query, values)
 
-    def create_tables(self, sqlite_cursor):
+    def create_table_channels(self, sqlite_cursor):
         sqlite_cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS channels (
@@ -298,6 +298,7 @@ class YouTubeDataPipeline:
             """
         )
 
+    def create_tables_videos(self, sqlite_cursor):
         sqlite_cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS videos (
@@ -318,6 +319,7 @@ class YouTubeDataPipeline:
             """
         )
 
+    def create_tables_comments(self, sqlite_cursor):
         sqlite_cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS comments (
@@ -333,7 +335,7 @@ class YouTubeDataPipeline:
     def run_channel_pipeline(self, channel_id):
         try:
             # Fetch YouTube data
-            youtube_channel_data = self.get_channel_data(channel_id)
+            youtube_channel_data = self.get_channel_info(channel_id)
 
             # Store data in MongoDB
             self.mongodb_collection.insert_one(youtube_channel_data)
@@ -342,7 +344,7 @@ class YouTubeDataPipeline:
             channel_data  = self.mongodb_channel_data(channel_id)
 
             #create tables
-            self.create_tables(self.sqlite_cursor)
+            self.create_table_channels(self.sqlite_cursor)
 
             # Load data from MongoDB to SQLite
             self.insert_channel_data(channel_data, self.sqlite_cursor)
@@ -355,13 +357,13 @@ class YouTubeDataPipeline:
     def run_videos_pipeline(self, channel_id):
         try:
             # Fetch YouTube data
-            youtube_video_data = self.get_youtube_videos_info(channel_id)
+            youtube_video_data = self.get_videos_info(channel_id)
 
             # Store data in MongoDB
             self.mongodb_collection.insert_many(youtube_video_data)
 
             #create tables
-            self.create_tables(self.sqlite_cursor)
+            self.create_tables_videos(self.sqlite_cursor)
 
             # Load data from MongoDB 
             video_data = self.mongodb_videos_data(channel_id)
@@ -384,7 +386,7 @@ class YouTubeDataPipeline:
             self.mongodb_collection.insert_many(youtube_comment_data)
 
             # Create tables
-            self.create_tables(self.sqlite_cursor)
+            self.create_tables_comments(self.sqlite_cursor)
 
             # Load data from MongoDB
             comment_data = self.mongodb_comments_data(channel_id)

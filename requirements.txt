@@ -4,6 +4,7 @@ pymongo
 google-api-python-client
 isodate
 transformers
-matplotlib
 transformers[sentencepiece]
 pyngrok
+extra_streamlit_components
+plotly
