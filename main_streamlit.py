@@ -19,41 +19,48 @@ def main():
                        layout="wide",
                        initial_sidebar_state="expanded",)
 
-    # st.markdown("""
-    #     <style>
-    #         body {
-    #             background-color: #f0f0f0; /* Light gray background */
-    #         }
-    #         h1 {
-    #             color: #005b96;
-    #             font-size: 40px;
-    #         }
-    #         h2 {
-    #             color: #005b96;
-    #             font-size: 30px;
-    #         }
-    #         .title {
-    #             color: #005b96;
-    #             font-size: 40px;
-    #         }
-    #     </style>
-    # """, unsafe_allow_html=True)
-
+    st.markdown("""
+        <style>
+            body {
+                background-color: #f0f0f0; /* Light gray background */
+            }
+            h1 {
+                color: #005b96;
+                font-size: 40px;
+            }
+            h2 {
+                color: #005b96;
+                font-size: 30px;
+            }
+            .title {
+                color: #005b96;
+                font-size: 40px;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
     st.sidebar.title("CREDENTIALS ")
     st.sidebar.markdown("---")
-
-    st.sidebar.subheader("Youtube API ")
-    # Input API key and channel ID
-    api_key = st.sidebar.text_input("Enter your YouTube API key:", type='password')
+    credentials = st.sidebar.button('Use Default Credentials ')
     st.sidebar.markdown("---")
+    if not credentials:
+        st.sidebar.subheader("Youtube API ")
+        # Input API key and channel ID
+        api_key = st.sidebar.text_input("Enter your YouTube API key:", type='password')
+        st.sidebar.markdown("---")
 
-    # MongoDB options
-    st.sidebar.subheader("MongoDB API")
-    mongodb_connection_string = st.sidebar.text_input("Enter MongoDB API:", type='password')
-    mongodb_database = st.sidebar.text_input("Enter MongoDB database name:", "moonwalker")
-    mongodb_collection = st.sidebar.text_input("Enter MongoDB collection name:", "youtube_data")
-    st.sidebar.markdown("---")
+        # MongoDB options
+        st.sidebar.subheader("MongoDB API")
+        mongodb_connection_string = st.sidebar.text_input("Enter MongoDB API:", type='password')
+        mongodb_database = st.sidebar.text_input("Enter MongoDB database name:", "moonwalker")
+        mongodb_collection = st.sidebar.text_input("Enter MongoDB collection name:", "youtube_data")
+        st.sidebar.markdown("---")
+    else:
+        # Access environment variables
+        mongodb_connection_string = st.secrets["MONGODB_URI"]
+        api_key = st.secrets["API_KEY"]
+        mongodb_database = st.secrets["mongodb_database"]
+        mongodb_collection = st.secrets["mongodb_collection"]
 
     # SQLite path
     sqlite_path = 'youtube_data.sqlite'
@@ -61,7 +68,7 @@ def main():
     # Instantiate the YouTubeDataVisualisation class
     visualise = YouTubeDataVisualisation(sqlite_path)
 
-    st.markdown('<p class="title">YouTube Dashboard</p>', unsafe_allow_html=True)
+    st.title('YouTube Dashboard')
 
     selected_tab = tab_bar(data=[
     TabBarItemData(id='Main', title="Main", description="About the project and input"),
@@ -259,7 +266,7 @@ def main():
         LIMIT 10
         """
         result_top_channels = visualise.sql_query(query_top_channels)
-        st.title('Top 10 channels by subscription count')
+        st.subheader('Top 10 channels by subscription count')
 
         display_box_df_charts = st.container(border=True)
         df_col, charts_col = display_box_df_charts.columns([1, 3])
@@ -271,7 +278,7 @@ def main():
             # Plotly pie chart
             fig = px.pie(result_top_channels, names='channel_name', values='subscription_count',
                         labels={'channel_name': 'Channel Name', 'subscription_count': 'Subscription Count'},
-                        title='Top 5 Channels by Subscription Count')
+                        title='Top 10 Channels by Subscription Count')
             # Display the chart
             st.plotly_chart(fig)
 
