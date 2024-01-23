@@ -104,19 +104,23 @@ def main():
         # Get channel ID from user input
         channel_ids = st.text_area("Enter YouTube channel IDs (comma-separated):")
 
+        show_info = st.button("Display Data")
+
+
         # If channel IDs are provided
-        if channel_ids:
+        if channel_ids or show_info:
             channel_ids = [channel_id.strip() for channel_id in channel_ids.split(",")]
 
             # Create a single info_box for all channels
             info_box = st.container(border=True)
             info_box.subheader("Channel Information")
-            data_box = info_box.container(border=True)
-            description_box = info_box.container(border=True)
-            col1, col2 = data_box.columns([4, 2])
 
+            
             for channel_id in channel_ids:
                 # If channel IDs are provided, execute the pipeline
+                data_box = info_box.container(border=True)  
+                col1, col2 = data_box.columns([4, 2])
+
                 if channel_id:
                     # Instantiate the YouTubeDataPipeline class
                     youtube_pipeline = YouTubeDataPipeline(api_key, sqlite_path, mongodb_connection_string, mongodb_database, mongodb_collection)
@@ -126,15 +130,12 @@ def main():
 
                     col1.write(f"**Channel Name:** {channel_info['Channel_Name']}")
                     col1.write(f"**Channel ID:** {channel_info['Channel_ID']}")
-                    col1.markdown('___')
-                    description_box.write(f"**Description:** {channel_info['Channel_Description']}")
-                    description_box.markdown('___')
+                    data_box.write(f"**Description:** {channel_info['Channel_Description']}")
                     col2.write(f"**Subscribers:** {channel_info['Subscription_Count']}")
                     col2.write(f"**Views:** {channel_info['Channel_Views']}")
-                    col2.markdown('___')
                     # Execute the pipeline
-                    button_save_data = info_box.button(f"Save Data of {channel_info['Channel_Name']}", key=f"save_data_{channel_id}")
-                    
+                    button_save_data = info_box.button(f"Save Data of {channel_info['Channel_Name']} Channel", key=f"save_data_{channel_id}")
+                    info_box.write('\n\n')
                     if button_save_data:
                         with st.spinner("Executing pipeline..."):
                             time.sleep(2)  # Simulating pipeline execution time
@@ -258,29 +259,6 @@ def main():
     elif selected_tab == 'Visualisation':
         st.set_option('deprecation.showPyplotGlobalUse', False)
 
-        # Top 5 channels by subscription count
-        query_top_channels = """
-        SELECT channel_name, subscription_count
-        FROM channels
-        ORDER BY subscription_count DESC
-        LIMIT 10
-        """
-        result_top_channels = visualise.sql_query(query_top_channels)
-        st.subheader('Top 10 channels by subscription count')
-
-        display_box_df_charts = st.container(border=True)
-        df_col, charts_col = display_box_df_charts.columns([2, 3])
-
-        with df_col:
-            table(data=result_top_channels, maxHeight=500, key="result_top_channels")
-
-        with charts_col:
-            # Plotly pie chart
-            fig = px.pie(result_top_channels, names='channel_name', values='subscription_count',
-                        labels={'channel_name': 'Channel Name', 'subscription_count': 'Subscription Count'},
-                        title='Top 10 Channels by Subscription Count')
-            # Display the chart
-            st.plotly_chart(fig)
 
         # Bar chart for the number of videos for each channel
         query_num_videos = """
@@ -301,13 +279,21 @@ def main():
             table(data=result_num_videos, maxHeight=500, key="result_num_videos")
 
         with charts_col:
-            # Plotly bar chart
-            fig = px.bar(result_num_videos, x='channel_name', y='num_videos',
+            # Create a bar chart using Plotly Express
+            fig = px.bar(result_num_videos, x='num_videos', y='channel_name',  # Swap x and y to have the channel names on the y-axis
                         labels={'channel_name': 'Channel Name', 'num_videos': 'Number of Videos'},
-                        title='Number of Videos for Each Channel')
+                        title='Number of Videos for Each Channel',
+                        orientation='h',  # Horizontal bar chart
+                        color='num_videos',  # Color the bars based on the number of videos
+                        color_continuous_scale=px.colors.sequential.Viridis,  # Choose a color scale
+                        text='num_videos')  # Add the number of videos as text on the bars
 
-            # Display the chart
+            # Display the chart in Streamlit
             st.plotly_chart(fig)
+
+
+
+        #88888888888888888888888888'Top 10 most viewed videos'8888888888888888888888888888888888888
 
         # Top 10 most viewed videos
         query_top_viewed_videos = """
@@ -318,47 +304,97 @@ def main():
         LIMIT 10;
         """
         result_top_viewed_videos = visualise.sql_query(query_top_viewed_videos)
-        st.title('Top 10 most viewed videos')
 
         display_result_top_viewed_videos = st.container(border=True)
         
 
         with display_result_top_viewed_videos: 
             # Plotly bar chart
-            fig = px.bar(result_top_viewed_videos, y='video_name', x='view_count',orientation= 'h',
+            # Create a bar chart using Plotly Express
+            fig = px.bar(result_top_viewed_videos, y='video_name', x='view_count',  # Swap x and y to have the video names on the y-axis
                         labels={'video_name': 'Video Name', 'view_count': 'View Count'},
-                        title='Top 10 Most Viewed Videos')
+                        title='Top 10 Most Viewed Videos',
+                        orientation='h',  # Horizontal bar chart
+                        color='view_count',  # Color the bars based on the view count
+                        color_continuous_scale=px.colors.sequential.Plasma,  # Choose a sequential color scale
+                        text='view_count')  # Add the view count as text on the bars
 
 
-            # Display the chart
-            st.plotly_chart(fig,theme="streamlit", use_container_width=True)
+            # Display the chart in Streamlit
+            st.plotly_chart(fig, use_container_width=True)
 
+#*********************************** Top 10 channels by subscription count ***********************
+        # Top 5 channels by subscription count
+        query_top_channels = """
+        SELECT channel_name, subscription_count
+        FROM channels
+        ORDER BY subscription_count DESC
+        LIMIT 10
+        """
+        result_top_channels = visualise.sql_query(query_top_channels)
+
+        display_box_df_charts = st.container(border=True)
+        df_col, charts_col = display_box_df_charts.columns([2, 3])
+
+        with df_col:
+            table(data=result_top_channels, maxHeight=500, key="result_top_channels")
+
+        with charts_col:
+            # Plotly pie chart
+            # Create a bar chart using Plotly Express
+            # Create a pie chart using Plotly Express
+            fig = px.pie(result_top_channels, names='channel_name', values='subscription_count',
+                        labels={'channel_name': 'Channel Name', 'subscription_count': 'Subscription Count'},
+                        title='Top 10 Channels by Subscription Count',
+                        hole=0.4,  # This creates a donut-like pie chart with a hole in the center
+                        color_discrete_sequence=px.colors.sequential.Plasma)  # Choose a color sequence
+
+            # Customize the layout to make the chart more readable
+            fig.update_layout(
+                title_x=0.5,  # Center the title
+                showlegend=False,  # Hide the legend
+                plot_bgcolor='white',  # Set the background color to white
+                font=dict(size=12),  # Set the font size
+                annotations=[dict(text='Channels', x=0.5, y=0.5, font_size=20, showarrow=False)]  # Add a text annotation in the center
+            )
+
+            # Display the chart in Streamlit
+            st.plotly_chart(fig, use_container_width=True)
+
+        
         # Timeline chart for videos published in 2022
         query_timeline = """
         SELECT c.channel_name, strftime('%Y-%m', v.published_at) as month_published
         FROM channels c 
         INNER JOIN videos v ON v.playlist_id = c.playlist_id 
-        WHERE v.published_at BETWEEN '2023-01-01 00:00:00' AND '2023-12-31 00:00:00';
+        WHERE v.published_at BETWEEN '2018-01-01 00:00:00' AND '2023-12-31 00:00:00';
         """
         result_timeline = visualise.sql_query(query_timeline)
-        st.title('Timeline chart for videos published in 2022')
+
+#*******************************************timeline line chart************************************
 
         display_result_timeline = st.container(border=True)
-        df_col, charts_col = display_result_timeline.columns([1, 3])
 
-        with df_col:
-            table(data=result_timeline.head(10), maxHeight=500, key="result_timeline")
+        timeline_data = result_timeline.groupby('month_published').size().reset_index(name='num_videos')
 
-        with charts_col: 
-            timeline_data = result_timeline.groupby('month_published').size().reset_index(name='num_videos')
+        # Create a timeline chart using Plotly Express
+        fig = px.line(timeline_data, x='month_published', y='num_videos',
+                    labels={'month_published': 'Month Published', 'num_videos': 'Number of Videos'},
+                    title='Month-wise Timeline of Videos Published',
+                    markers=True)  # Add markers to the line to indicate the data points
 
-            # Plotly timeline chart
-            fig = px.line(timeline_data, x='month_published', y='num_videos',
-                        labels={'month_published': 'Month Published', 'num_videos': 'Number of Videos'},
-                        title='Month-wise Timeline of Videos Published in 2023')
+        # Customize the layout to make the chart more readable
+        fig.update_layout(
+            xaxis_title='Month Published',
+            yaxis_title='Number of Videos',
+            title_x=0.5,  # Center the title
+            plot_bgcolor='white',  # Set the background color to white
+            font=dict(size=12),  # Set the font size
+            height=500  # Set the height of the chart
+        )
 
-            # Display the chart
-            st.plotly_chart(fig)
+        # Display the chart in Streamlit
+        display_result_timeline.plotly_chart(fig, use_container_width=True)
 
 
 
