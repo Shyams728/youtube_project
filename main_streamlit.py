@@ -361,6 +361,7 @@ def main():
             # Display the chart in Streamlit
             st.plotly_chart(fig, use_container_width=True)
 
+#*******************************************timeline line chart************************************
         
         # Timeline chart for videos published in 2022
         query_timeline = """
@@ -371,8 +372,6 @@ def main():
         """
         result_timeline = visualise.sql_query(query_timeline)
 
-#*******************************************timeline line chart************************************
-
         display_result_timeline = st.container(border=True)
 
         timeline_data = result_timeline.groupby('month_published').size().reset_index(name='num_videos')
@@ -380,18 +379,9 @@ def main():
         # Create a timeline chart using Plotly Express
         fig = px.line(timeline_data, x='month_published', y='num_videos',
                     labels={'month_published': 'Month Published', 'num_videos': 'Number of Videos'},
-                    title='Month-wise Timeline of Videos Published',
+                    title='Overall Month-wise Timeline of Videos Published',
                     markers=True)  # Add markers to the line to indicate the data points
 
-        # Customize the layout to make the chart more readable
-        fig.update_layout(
-            xaxis_title='Month Published',
-            yaxis_title='Number of Videos',
-            title_x=0.5,  # Center the title
-            plot_bgcolor='white',  # Set the background color to white
-            font=dict(size=12),  # Set the font size
-            height=500  # Set the height of the chart
-        )
 
         # Display the chart in Streamlit
         display_result_timeline.plotly_chart(fig, use_container_width=True)
