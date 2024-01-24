@@ -97,7 +97,7 @@ class YouTubeDataVisualisation:
             select_videos_query = f"SELECT * FROM videos WHERE video_name IN {selected_videos_tuple}"
         else:
             # Handle the case when no videos are selected
-            select_videos_query = 'SELECT * FROM videos'
+            select_videos_query = None #'SELECT * FROM videos'
 
         # Execute the query and display the data for selected videos
         data_videos = self.sql_query(select_videos_query)

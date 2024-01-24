@@ -161,9 +161,6 @@ def main():
             st.empty()
 
 
-
-
-
     if selected_tab == 'Tables':
         a, b = st.tabs(["Predefined SQL queries charts", "SQL query"])
 
@@ -176,7 +173,6 @@ def main():
 
         with a:
             
-
             container_view = st.container(border=True)
             col1, col2 = container_view.columns([6, 2])
             with col1:
@@ -191,7 +187,7 @@ def main():
                 st.dataframe(comments_data)
             else:
                 # Display the results of the selected predefined query
-                st.dataframe(dropdown_data)
+                st.dataframe(dropdown_data,use_container_width=True)
 
 
     elif selected_tab == 'Visualisation':
@@ -328,11 +324,33 @@ def main():
 
     # NLP Analysis tab
     elif selected_tab == 'NLP Analysis':
-        # NLP analysis on comments
-        comments_query = st.text_input("Enter SQL Query for Comments:", "SELECT * FROM comments where video_id = 'E-RJbdTJX-4'")
-        # Integrate sentiment analysis using transformers pipeline
-        comments_result = visualise.sql_query(comments_query)
 
+        st.subheader("Query Selection and Analysis")
+
+        # Radio buttons for selecting query type
+        query_type = st.radio(
+            "Select type of query",
+            ["Filter data", "Enter SQL Query for Comments"],
+            captions = ["By using select box method.", "SQL easy Quary write it down",],
+            index=0  # Default selection index
+        )
+
+        if query_type == "Filter data":
+            st.write("You selected Filter data.")
+            comments_data = visualise.create_filter_container()
+            st.dataframe(comments_data)
+            comments_result = comments_data['comment_text']
+
+        elif query_type == "Enter SQL Query for Comments":
+            # NLP analysis on comments
+            comments_query = st.text_input("Enter SQL Query for Comments", "SELECT * FROM comments WHERE video_id = 'E-RJbdTJX-4'")
+            # Integrate sentiment analysis using transformers pipeline
+            comments_result = visualise.sql_query(comments_query)
+
+        else:
+            st.write("You didn't select any Query.")
+
+        # Perform sentiment analysis
         visualise.nlp_analysis(comments_result)
         st.success("Sentiments Analysis Completed.")
 
@@ -342,3 +360,4 @@ def main():
 # Run the main script
 if __name__ == "__main__":
     main()
+  
