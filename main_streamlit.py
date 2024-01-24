@@ -13,6 +13,8 @@ from streamlit_shadcn_ui import table
 from youtube_data import YouTubeDataPipeline
 from visualisations import YouTubeDataVisualisation
 
+
+
 def main():
     st.set_page_config(page_title="Youtube Dashboard",
                        page_icon=":tv:",
@@ -159,101 +161,37 @@ def main():
             st.empty()
 
 
-    # Tables tab
+
+
+
     if selected_tab == 'Tables':
-
-
-        a,b = st.tabs( ["Predefined SQL queries","SQL query"])
+        a, b = st.tabs(["Predefined SQL queries charts", "SQL query"])
 
         with b:
-            #SQL query     
+            # SQL query
             query = st.text_input("Enter SQL Query for Channels:", "SELECT * FROM channels")
             channel_data_result = visualise.sql_query(query)
-            # Display the full channel data 
-            st.write("Channel Data:", channel_data_result)
+            # Display the full channel data
+            st.dataframe(channel_data_result)  # Use st.dataframe to display a DataFrame
 
         with a:
+            
 
-            drop_down_box = st.container(border=True)
-            col1, col2 = drop_down_box.columns([6, 1])
-
+            container_view = st.container(border=True)
+            col1, col2 = container_view.columns([6, 2])
             with col1:
-                # Create tabs
-                    
-                # Define SQL queries
-                dropdown_options = {
-                    "What are the names of all the videos and their corresponding channels?":
-                        """SELECT v.video_name, c.channel_name
-                        FROM videos v
-                        INNER JOIN channels c ON v.playlist_id = c.playlist_id;
-                        """,
-
-                    "Which channels have the most number of videos, and how many videos do they have?":
-                        """SELECT c.channel_name, COUNT(*) AS num_videos
-                        FROM channels c
-                        INNER JOIN videos v ON v.playlist_id = c.playlist_id
-                        GROUP BY c.channel_name
-                        ORDER BY num_videos DESC;
-                        """,
-
-                    "What are the top 10 most viewed videos and their respective channels?":
-                        """SELECT v.video_name, c.channel_name, v.view_count
-                        FROM videos v
-                        INNER JOIN channels c ON v.playlist_id = c.playlist_id
-                        ORDER BY v.view_count DESC
-                        LIMIT 10;""",
-
-                    "How many comments were made on each video, and what are their corresponding video names?":    
-                        """SELECT v.video_name, COUNT(*) AS num_comments 
-                        FROM videos v INNER JOIN comments c ON v.video_id = c.video_id 
-                        GROUP BY v.video_name;""",
-
-                    "Which videos have the highest number of likes, and what are their corresponding channel names?" :    
-                        """SELECT v.video_name, c.channel_name, v.like_count 
-                        FROM videos v INNER JOIN channels c ON v.playlist_id = c.playlist_id 
-                        ORDER BY v.like_count DESC 
-                        LIMIT 10;""",
-
-                    "What is the total number of views for each channel, and what are their corresponding channel names?" :    
-                        """SELECT c.channel_name, SUM(v.view_count) AS total_views 
-                        FROM channels c INNER JOIN videos v ON v.playlist_id = c.playlist_id 
-                        GROUP BY c.channel_name;""",
-
-                    "What are the names of all the channels that have published videos in the year 2022?" :    
-                        """
-                        SELECT c.channel_name FROM channels c 
-                        INNER JOIN videos v ON v.playlist_id = c.playlist_id 
-                        WHERE v.published_at BETWEEN '2022-01-01 00:0000' AND '2022-12-31 00:00:00';
-                            """,
-
-                        "What is the average duration of all videos in each channel, and what are their corresponding channel names?":    
-                            """SELECT c.channel_name, AVG(v.duration) AS average_duration 
-                            FROM channels c INNER JOIN videos v ON v.playlist_id = c.playlist_id 
-                            GROUP BY c.channel_name;""",
-
-                        "Which videos have the highest number of comments, and what are their corresponding channel names?" :    
-                            """SELECT v.video_name, c2.channel_name, COUNT(*) AS num_comments 
-                            FROM videos v INNER JOIN comments c ON v.video_id = c.video_id INNER JOIN channels c2 ON v.playlist_id = c2.playlist_id 
-                            GROUP BY v.video_name, c2.channel_name;""",
-
-                    }
-
-
-                # User interface for selecting and displaying SQL queries
-                selected_option = st.selectbox("Select SQL Query:", list(dropdown_options.keys()))
-                query = dropdown_options[selected_option]
-                
-                    
+                dropdown_data = visualise.create_dropdown_container()
             with col2:
-                st.write('\n')
-                show_data = st.button("Display SQL Data")
+                container_toggle = st.container(border=True)
+                container_toggle.write('\n')
+                filter_data = container_toggle.toggle('Filter data')
 
-            if show_data:
-
-                query_result = visualise.sql_query(query)
-                st.subheader(f'Displaying Data For \n {selected_option}')
-                st.dataframe(query_result,use_container_width=True)
-
+            if filter_data:
+                comments_data = visualise.create_filter_container()
+                st.dataframe(comments_data)
+            else:
+                # Display the results of the selected predefined query
+                st.dataframe(dropdown_data)
 
 
     elif selected_tab == 'Visualisation':
