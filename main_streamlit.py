@@ -339,7 +339,7 @@ def main():
         if query_type == "***Filter data***":
             st.write("You selected Filter data.")
             comments_result = visualise.create_filter_container()
-            st.dataframe(comments_data)
+            st.dataframe(comments_result)
             
 
         elif query_type == "***Enter SQL Query for Comments***":
