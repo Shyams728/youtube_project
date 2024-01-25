@@ -3,6 +3,7 @@ pandas
 pymongo
 google-api-python-client
 isodate
+TensorFlow >= 2.0
 transformers
 transformers[sentencepiece]
 pyngrok
