@@ -331,8 +331,9 @@ def main():
         query_type = st.radio(
             "Select type of query",
             ["Filter data", "Enter SQL Query for Comments"],
-            captions = ["By using select box method.", "SQL easy Quary write it down",],
-            index=0  # Default selection index
+            captions = ["By using selection.", " Write the SQL Quary",],
+            horizontal= True ,
+            index=1  # Default selection index
         )
 
         if query_type == "Filter data":
@@ -346,13 +347,16 @@ def main():
             comments_query = st.text_input("Enter SQL Query for Comments", "SELECT * FROM comments WHERE video_id = 'E-RJbdTJX-4'")
             # Integrate sentiment analysis using transformers pipeline
             comments_result = visualise.sql_query(comments_query)
-
+            st.dataframe(comments_result)
         else:
             st.write("You didn't select any Query.")
 
-        # Perform sentiment analysis
-        visualise.nlp_analysis(comments_result)
-        st.success("Sentiments Analysis Completed.")
+        analyse = st.button('Analyse the Sentiment of the selected comments')
+
+        if analyse:
+            # Perform sentiment analysis
+            visualise.nlp_analysis(comments_result)
+            st.success("Sentiments Analysis Completed.")
 
     # Close connections
     visualise.close_connections()
