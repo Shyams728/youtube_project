@@ -338,9 +338,9 @@ def main():
 
         if query_type == "***Filter data***":
             st.write("You selected Filter data.")
-            comments_data = visualise.create_filter_container()
+            comments_result = visualise.create_filter_container()
             st.dataframe(comments_data)
-            comments_result = comments_data['comment_text']
+            
 
         elif query_type == "***Enter SQL Query for Comments***":
             # NLP analysis on comments
