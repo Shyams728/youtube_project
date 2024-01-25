@@ -336,13 +336,13 @@ def main():
             index=1  # Default selection index
         )
 
-        if query_type == "Filter data":
+        if query_type == "***Filter data***":
             st.write("You selected Filter data.")
             comments_data = visualise.create_filter_container()
             st.dataframe(comments_data)
             comments_result = comments_data['comment_text']
 
-        elif query_type == "Enter SQL Query for Comments":
+        elif query_type == "***Enter SQL Query for Comments***":
             # NLP analysis on comments
             comments_query = st.text_input("Enter SQL Query for Comments", "SELECT * FROM comments WHERE video_id = 'E-RJbdTJX-4'")
             # Integrate sentiment analysis using transformers pipeline
