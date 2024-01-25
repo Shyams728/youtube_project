@@ -330,7 +330,7 @@ def main():
         # Radio buttons for selecting query type
         query_type = st.radio(
             "Select type of query",
-            ["Filter data", "Enter SQL Query for Comments"],
+            ["***Filter data***", "***Enter SQL Query for Comments***"],
             captions = ["By using selection.", " Write the SQL Quary",],
             horizontal= True ,
             index=1  # Default selection index
