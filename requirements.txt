@@ -1,3 +1,7 @@
+# Dev environment
+pip
+autopep8
+#app
 streamlit
 pandas
 pymongo
