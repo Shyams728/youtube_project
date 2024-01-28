@@ -30,11 +30,13 @@ class YouTubeDataVisualisation:
             data.append({"comment": comment, "sentiment": sentiment[0]['label'], "score": sentiment[0]['score']})
 
         st.subheader("Sentiment Analysis")
-        for entry in data:
-            st.write(f"Comment: {entry['comment']}")
-            st.write(f"Sentiment: {entry['sentiment']}")
-            st.write(f"Score: {entry['score']}")
-            st.write("---")
+        sentiment_container = st.container(border=True)
+        with sentiment_container:
+            for entry in data:
+                st.write(f"Comment: {entry['comment']}")
+                st.write(f"Sentiment: {entry['sentiment']}")
+                st.write(f"Score: {entry['score']}")
+                st.write("---")
 
         return data
     
@@ -65,55 +67,61 @@ class YouTubeDataVisualisation:
         # Execute the query and display the data for selected channels
         data_channels = self.sql_query(select_channels_query)
         filter_container.dataframe(data_channels)
+        if selected_channel:
+            # Select Videos based on selected channels
+            if len(selected_channel) == 1:
+                    video_names_query = f"""
+                        SELECT v.video_name
+                        FROM videos v
+                        INNER JOIN channels c ON v.playlist_id = c.playlist_id
+                        WHERE c.channel_name == '{selected_channel[0]}'
+                    """
+            elif len(selected_channel) > 1:
+                video_names_query = f"""
+                    SELECT v.video_name
+                    FROM videos v
+                    INNER JOIN channels c ON v.playlist_id = c.playlist_id
+                    WHERE c.channel_name IN {tuple(selected_channel)}
+                """
 
-        # Select Videos based on selected channels
-        if len(selected_channel) == 1:
-            video_names_query = f"""
-                SELECT v.video_name
-                FROM videos v
-                INNER JOIN channels c ON v.playlist_id = c.playlist_id
-                WHERE c.channel_name == '{selected_channel[0]}'
-            """
-        elif len(selected_channel) > 1:
-            video_names_query = f"""
-                SELECT v.video_name
-                FROM videos v
-                INNER JOIN channels c ON v.playlist_id = c.playlist_id
-                WHERE c.channel_name IN {tuple(selected_channel)}
-            """
+            # Execute the query and display the video names for selected channels
+            video_names_q = self.sql_query(video_names_query)['video_name'].tolist()
+            selected_video = filter_container.multiselect('Select video:', sorted(video_names_q), max_selections=5, help='Select the Video')
+            if selected_video:
+                # Construct the SQL query for selected videos
+                if len(selected_video) == 1:
+                    select_videos_query = f"SELECT * FROM videos WHERE video_name == '{selected_video[0]}'"
+                elif len(selected_video) > 1:
+                    selected_videos_tuple = tuple(selected_video)
+                    select_videos_query = f"SELECT * FROM videos WHERE video_name IN {selected_videos_tuple}"
+                else:
+                    # Handle the case when no videos are selected
+                    select_videos_query = None #'SELECT * FROM videos'
+
+                # Execute the query and display the data for selected videos
+                data_videos = self.sql_query(select_videos_query)
+                filter_container.dataframe(data_videos)
+
+                # Construct the SQL query for selected videos
+                if len(data_videos['video_id']) == 1:
+                    select_comments_query = f"SELECT * FROM comments WHERE video_id == '{data_videos['video_id'][0]}'"
+                    comments_data = self.sql_query(select_comments_query)
+                elif len(data_videos['video_id']) > 1:
+                    video_ids = tuple(data_videos['video_id'])
+                    select_comments_query = f"SELECT * FROM comments WHERE video_id IN {video_ids}"
+                    comments_data = self.sql_query(select_comments_query)
+
+                else:
+                    # Handle the case when no videos are selected
+                    comments_data = None
+            else:
+                # Handle the case when no videos are selected
+                comments_data = None
+
         else:
             # Handle the case when no channels are selected
             video_names_query = 'SELECT * FROM videos'
 
-        # Execute the query and display the video names for selected channels
-        video_names_q = self.sql_query(video_names_query)['video_name'].tolist()
-        selected_video = filter_container.multiselect('Select video:', sorted(video_names_q), max_selections=5, help='Select the Video')
-
-        # Construct the SQL query for selected videos
-        if len(selected_video) == 1:
-            select_videos_query = f"SELECT * FROM videos WHERE video_name == '{selected_video[0]}'"
-        elif len(selected_video) > 1:
-            selected_videos_tuple = tuple(selected_video)
-            select_videos_query = f"SELECT * FROM videos WHERE video_name IN {selected_videos_tuple}"
-        else:
-            # Handle the case when no videos are selected
-            select_videos_query = None #'SELECT * FROM videos'
-
-        # Execute the query and display the data for selected videos
-        data_videos = self.sql_query(select_videos_query)
-        filter_container.dataframe(data_videos)
-
-        # Construct the SQL query for selected videos
-        if len(data_videos['video_id']) == 1:
-            select_comments_query = f"SELECT * FROM comments WHERE video_id == '{data_videos['video_id'][0]}'"
-            comments_data = self.sql_query(select_comments_query)
-        elif len(data_videos['video_id']) > 1:
-            video_ids = tuple(data_videos['video_id'])
-            select_comments_query = f"SELECT * FROM comments WHERE video_id IN {video_ids}"
-            comments_data = self.sql_query(select_comments_query)
-        else:
-            # Handle the case when no videos are selected
-            comments_data = None
         return comments_data
 
 
