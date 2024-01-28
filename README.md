@@ -53,19 +53,19 @@ To use the YouTube Data Dashboard, you need to provide the following credentials
 
 ## Dockerization
 
-The project can be containerized using Docker. Build the Docker image using the provided `dockerfile.txt`:
+To run the `shyamsd/youtube_streamlit_app` Docker container:
 
-```bash
-docker build -t youtube-data-dashboard:latest -f dockerfile.txt .
-```
+1. Pull the Docker image:
+   ```
+   docker pull shyamsd/youtube_streamlit_app
+   ```
 
-Run the Docker container:
+2. Run the Docker container:
+   ```
+   docker run -p 8501:8501 shyamsd/youtube_streamlit_app
+   ```
 
-```bash
-docker run -p 8501:8501 youtube-data-dashboard:latest
-```
-
-Access the application at [http://localhost:8501](http://localhost:8501) in your web browser.
+3. Access the application at [http://localhost:8501](http://localhost:8501) in your web browser.
 
 ## Dependencies
 
@@ -75,9 +75,8 @@ The project relies on the following Python libraries and packages:
 - `sqlite3`
 - `pandas`
 - `pymongo`
+- `plotly`
 - `googleapiclient`
-- `isodate`
-- `datetime`
 - `transformers`
 - `matplotlib`
 - `os`
