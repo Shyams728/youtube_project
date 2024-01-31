@@ -286,7 +286,7 @@ def main():
             # Customize the layout to make the chart more readable
             fig.update_layout(
                 title_x=0.5,  # Center the title
-                showlegend=False,  # Hide the legend
+                showlegend=True,  # show the legend
                 plot_bgcolor='white',  # Set the background color to white
                 font=dict(size=12),  # Set the font size
                 annotations=[dict(text='Channels', x=0.5, y=0.5, font_size=20, showarrow=False)]  # Add a text annotation in the center
