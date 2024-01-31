@@ -187,7 +187,8 @@ def main():
                 st.dataframe(comments_data)
             else:
                 # Display the results of the selected predefined query
-                st.dataframe(dropdown_data,use_container_width=True)
+                table(data=dropdown_data, maxHeight=1000, key="dropdown_data")
+                # st.dataframe(dropdown_data,use_container_width=True)
 
 
     elif selected_tab == 'Visualisation':
@@ -258,7 +259,7 @@ def main():
             st.plotly_chart(fig, use_container_width=True)
 
 #*********************************** Top 10 channels by subscription count ***********************
-        # Top 5 channels by subscription count
+        # Top 10 channels by subscription count
         query_top_channels = """
         SELECT channel_name, subscription_count
         FROM channels
