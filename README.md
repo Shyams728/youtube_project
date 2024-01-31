@@ -68,6 +68,7 @@ To run the `shyamsd/youtube_streamlit_app` Docker container:
 3. Access the application at [http://localhost:8501](http://localhost:8501) in your web browser.
 
 ## Access this hosted streamlit dashboard
+https://shyams-youtube-dashboard-project.streamlit.app/
 Access the application at [[YouTube Dashboard](https://shyams-youtube-dashboard-project.streamlit.app/)] in your web browser.
 
 ## Dependencies
