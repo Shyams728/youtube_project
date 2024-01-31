@@ -14,7 +14,6 @@ from youtube_data import YouTubeDataPipeline
 from visualisations import YouTubeDataVisualisation
 
 
-
 def main():
     st.set_page_config(page_title="Youtube Dashboard",
                        page_icon=":tv:",
@@ -60,6 +59,7 @@ def main():
     else:
         # Access environment variables
         mongodb_connection_string = st.secrets["MONGODB_URI"]
+        # mongodb_connection_string = mongodb_connection.replace("'", "")
         api_key = st.secrets["API_KEY"]
         mongodb_database = st.secrets["mongodb_database"]
         mongodb_collection = st.secrets["mongodb_collection"]
@@ -281,7 +281,7 @@ def main():
                         labels={'channel_name': 'Channel Name', 'subscription_count': 'Subscription Count'},
                         title='Top 10 Channels by Subscription Count',
                         hole=0.4,  # This creates a donut-like pie chart with a hole in the center
-                        color_discrete_sequence=px.colors.sequential.Plasma)  # Choose a color sequence
+                        color_discrete_sequence=px.colors.sequential.Viridis)  # Choose a color sequence
 
             # Customize the layout to make the chart more readable
             fig.update_layout(
