@@ -145,14 +145,16 @@ def main():
                             youtube_pipeline.run_videos_pipeline(channel_id)
                             youtube_pipeline.run_comments_pipeline(channel_id)
 
-                        st.markdown(""" **Pipeline involves the following steps:**
-                                    1. Extracting data from YouTube
-                                    2. Preprocessing data
-                                    3. Storing data in MongoDB
-                                    4. Querying data from MongoDB
-                                    5. Creating tables using SQL
-                                    6. Storing data in Database""")
+                        st.markdown(""" **Pipeline involves the following steps:**  
+                                        - Extracting data from YouTube  
+                                        - Preprocessing data  
+                                        - Storing data in MongoDB  
+                                        - Querying data from MongoDB  
+                                        - Creating tables using SQL  
+                                        - Storing data in Database""")
 
+
+                    
                     # Close the connections when done with the current channel
                     youtube_pipeline.close_connections()
 
