@@ -150,8 +150,8 @@ def main():
                                     2. Preprocessing data
                                     3. Storing data in MongoDB
                                     4. Querying data from MongoDB
-                                    5. Creating tables in SQL
-                                    6. Storing data in SQL""")
+                                    5. Creating tables using SQL
+                                    6. Storing data in Database""")
 
                     # Close the connections when done with the current channel
                     youtube_pipeline.close_connections()
