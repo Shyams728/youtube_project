@@ -21,7 +21,7 @@ The project is structured as follows:
 - **Visualizations Module (`visualisations.py`):** The `YouTubeDataVisualisation` class contains functions for generating various visualizations based on the stored data.
 
 - **Additional Modules:**
-  - `dockerfile.txt`: Configuration file for building a Docker image.
+  - `dockerfile`: Configuration file for building a Docker image.
   - `requirements.txt`: List of Python dependencies required for the project.
 
 ## Setup and Configuration
