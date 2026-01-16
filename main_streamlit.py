@@ -146,19 +146,33 @@ def main():
                     button_save_data = info_box.button(f"Save Data of {channel_info['Channel_Name']} Channel", key=f"save_data_{channel_id}")
                     info_box.write('\n\n')
                     if button_save_data:
-                        with st.spinner("Executing pipeline..."):
-                            # Removed artificial sleep
-                            youtube_pipeline.run_channel_pipeline(channel_id)
-                            youtube_pipeline.run_videos_pipeline(channel_id)
-                            youtube_pipeline.run_comments_pipeline(channel_id)
+                        progress_bar = st.progress(0, text="Starting pipeline...")
+                        
+                        # 1. Channel Pipeline
+                        progress_bar.progress(10, text="Executing Channel Pipeline...")
+                        youtube_pipeline.run_channel_pipeline(channel_id)
+                        
+                        # 2. Videos Pipeline
+                        progress_bar.progress(40, text="Executing Videos Pipeline (this may take a while)...")
+                        youtube_pipeline.run_videos_pipeline(channel_id)
+                        
+                        # 3. Comments Pipeline
+                        progress_bar.progress(70, text="Executing Comments Pipeline...")
+                        youtube_pipeline.run_comments_pipeline(channel_id)
+                        
+                        progress_bar.progress(100, text="Pipeline execution complete!")
+                        time.sleep(1) # Brief pause for user to see 100%
+                        progress_bar.empty()
 
-                        st.markdown(""" **Pipeline involves the following steps:**  
+                        st.success(f"Data for {channel_info['Channel_Name']} has been successfully processed and saved.")
+
+                        st.markdown(""" **Pipeline involved the following steps:**  
                                         - Extracting data from YouTube  
                                         - Preprocessing data  
-                                        - Storing data in MongoDB  
+                                        - Storing data in MongoDB (Data Lake) 
                                         - Querying data from MongoDB  
                                         - Creating tables using SQL  
-                                        - Storing data in Database""")
+                                        - Storing data in SQLite Database""")
 
 
                     

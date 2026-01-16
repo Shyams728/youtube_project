@@ -2,12 +2,15 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 import pymongo
+from pymongo import UpdateOne
 from googleapiclient.discovery import build
 import isodate
 import datetime
 import time
 import matplotlib.pyplot as plt
 import os
+
+from sql_queries import QUERY_GET_PLAYLIST_ID, QUERY_GET_VIDEO_IDS_BY_PLAYLIST
 
 
 class YouTubeDataPipeline:
@@ -178,7 +181,7 @@ class YouTubeDataPipeline:
 
     def mongodb_videos_data(self, channel_id):
         
-        find_id = f"SELECT playlist_id FROM channels WHERE channel_id = '{channel_id}'"
+        find_id = QUERY_GET_PLAYLIST_ID.format(channel_id)
         self.sqlite_cursor.execute(find_id)
         playlist_id = self.sqlite_cursor.fetchone()[0]
 
@@ -201,11 +204,11 @@ class YouTubeDataPipeline:
 
     def mongodb_comments_data(self, channel_id):
         
-        find_id = f"SELECT playlist_id FROM channels WHERE channel_id = '{channel_id}'"
+        find_id = QUERY_GET_PLAYLIST_ID.format(channel_id)
         self.sqlite_cursor.execute(find_id)
         playlist_id = self.sqlite_cursor.fetchone()[0]
         
-        find_id = f"SELECT video_id FROM videos WHERE playlist_id = '{playlist_id}'"
+        find_id = QUERY_GET_VIDEO_IDS_BY_PLAYLIST.format(playlist_id)
         self.sqlite_cursor.execute(find_id)
         video_ids = [video[0] for video in self.sqlite_cursor.fetchall()]
 
@@ -228,7 +231,7 @@ class YouTubeDataPipeline:
 
     def insert_channel_data(self, document, sqlite_cursor):
         query = """
-            INSERT OR IGNORE INTO channels (
+            INSERT OR REPLACE INTO channels (
                 channel_id, channel_name, subscription_count, channel_views,
                 channel_description, playlist_id
             ) VALUES (?, ?, ?, ?, ?, ?)
@@ -245,7 +248,7 @@ class YouTubeDataPipeline:
 
     def insert_video_data(self, document, table_name, sqlite_cursor):
         query = f"""
-            INSERT OR IGNORE INTO {table_name} (
+            INSERT OR REPLACE INTO {table_name} (
                 video_id, video_name, video_description, tags,
                 published_at, view_count, like_count, favorite_count,
                 comment_count, duration, caption, thumbnail, playlist_id
@@ -337,8 +340,12 @@ class YouTubeDataPipeline:
             # Fetch YouTube data
             youtube_channel_data = self.get_channel_info(channel_id)
 
-            # Store data in MongoDB
-            self.mongodb_collection.insert_one(youtube_channel_data)
+            # Store data in MongoDB using upsert
+            self.mongodb_collection.update_one(
+                {"Channel_ID": youtube_channel_data["Channel_ID"]},
+                {"$set": youtube_channel_data},
+                upsert=True
+            )
             
              # Fetch YouTube channel data from MongoDB
             channel_data  = self.mongodb_channel_data(channel_id)
@@ -359,8 +366,13 @@ class YouTubeDataPipeline:
             # Fetch YouTube data
             youtube_video_data = self.get_videos_info(channel_id)
 
-            # Store data in MongoDB
-            self.mongodb_collection.insert_many(youtube_video_data)
+            # Store data in MongoDB using bulk upsert
+            bulk_ops = [
+                UpdateOne({"Video_ID": video["Video_ID"]}, {"$set": video}, upsert=True)
+                for video in youtube_video_data
+            ]
+            if bulk_ops:
+                self.mongodb_collection.bulk_write(bulk_ops)
 
             #create tables
             self.create_tables_videos(self.sqlite_cursor)
@@ -382,8 +394,13 @@ class YouTubeDataPipeline:
             # Fetch YouTube data
             youtube_comment_data = self.get_comments_info(channel_id)
 
-            # Store data in MongoDB
-            self.mongodb_collection.insert_many(youtube_comment_data)
+            # Store data in MongoDB using bulk upsert
+            bulk_ops = [
+                UpdateOne({"Comment_ID": comment["Comment_ID"]}, {"$set": comment}, upsert=True)
+                for comment in youtube_comment_data
+            ]
+            if bulk_ops:
+                self.mongodb_collection.bulk_write(bulk_ops)
 
             # Create tables
             self.create_tables_comments(self.sqlite_cursor)

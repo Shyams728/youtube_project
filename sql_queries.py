@@ -111,3 +111,19 @@ FROM videos
 GROUP BY day_of_week
 ORDER BY day_of_week
 """
+
+# Filter/Selection Queries
+QUERY_ALL_CHANNEL_NAMES = "SELECT channel_name FROM channels"
+QUERY_SELECT_CHANNELS = "SELECT * FROM channels"
+QUERY_VIDEOS_BY_CHANNELS = """
+    SELECT v.video_name
+    FROM videos v
+    INNER JOIN channels c ON v.playlist_id = c.playlist_id
+    WHERE c.channel_name IN {}
+"""
+QUERY_SELECT_VIDEOS = "SELECT * FROM videos"
+QUERY_SELECT_COMMENTS = "SELECT * FROM comments"
+
+# Internal Helper Queries
+QUERY_GET_PLAYLIST_ID = "SELECT playlist_id FROM channels WHERE channel_id = '{}'"
+QUERY_GET_VIDEO_IDS_BY_PLAYLIST = "SELECT video_id FROM videos WHERE playlist_id = '{}'"
