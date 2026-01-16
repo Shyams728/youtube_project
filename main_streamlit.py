@@ -5,13 +5,19 @@ import pymongo
 import plotly.express as px
 import isodate
 import datetime
-from transformers import pipeline
+# from transformers import pipeline
 import time
 from extra_streamlit_components import tab_bar,TabBarItemData
 from streamlit_shadcn_ui import table
 
 from youtube_data import YouTubeDataPipeline
 from visualisations import YouTubeDataVisualisation
+from sql_queries import (
+    QUERY_NUM_VIDEOS, QUERY_TOP_VIEWED_VIDEOS, QUERY_TOP_CHANNELS_SUBS, QUERY_TIMELINE,
+    QUERY_KPI_TOTAL_CHANNELS, QUERY_KPI_TOTAL_VIDEOS, QUERY_KPI_TOTAL_VIEWS, 
+    QUERY_KPI_TOTAL_LIKES, QUERY_KPI_TOTAL_COMMENTS, QUERY_KPI_TOTAL_SUBS,
+    QUERY_ENGAGEMENT_SCATTER, QUERY_UPLOAD_SCHEDULE
+)
 
 
 def main():
@@ -74,6 +80,7 @@ def main():
 
     selected_tab = tab_bar(data=[
     TabBarItemData(id='Main', title="Main", description="About the project and input"),
+    TabBarItemData(id='Dashboard', title="Dashboard", description="KPIs & Analytics"),
     TabBarItemData(id= 'Tables', title="Tables", description="view the data"),
     TabBarItemData(id='Visualisation', title="Visualisation", description="Overview "),
     TabBarItemData(id='NLP Analysis', title="NLP Analysis", description="translation and sentiment of the comments"),], default='Main')
@@ -140,7 +147,7 @@ def main():
                     info_box.write('\n\n')
                     if button_save_data:
                         with st.spinner("Executing pipeline..."):
-                            time.sleep(2)  # Simulating pipeline execution time
+                            # Removed artificial sleep
                             youtube_pipeline.run_channel_pipeline(channel_id)
                             youtube_pipeline.run_videos_pipeline(channel_id)
                             youtube_pipeline.run_comments_pipeline(channel_id)
@@ -161,6 +168,92 @@ def main():
         else:
             # If no channel ID is provided, clear the screen
             st.empty()
+
+    elif selected_tab == 'Dashboard':
+        st.header("KPIs & Analytics")
+
+        # --- Row 1: KPI Cards ---
+        st.subheader("High-Level Metrics")
+        
+        col1, col2, col3, col4 = st.columns(4)
+
+        total_channels = visualise.sql_query(QUERY_KPI_TOTAL_CHANNELS).iloc[0, 0]
+        total_videos = visualise.sql_query(QUERY_KPI_TOTAL_VIDEOS).iloc[0, 0]
+        total_subs = visualise.sql_query(QUERY_KPI_TOTAL_SUBS).iloc[0, 0]
+        total_views = visualise.sql_query(QUERY_KPI_TOTAL_VIEWS).iloc[0, 0]
+        
+        with col1:
+            st.metric(label="Total Channels", value=total_channels)
+        with col2:
+            st.metric(label="Total Subscribers", value=f"{total_subs:,}")
+        with col3:
+            st.metric(label="Total Videos", value=f"{total_videos:,}")
+        with col4:
+            st.metric(label="Total Views", value=f"{total_views:,}")
+        
+        st.markdown("---")
+        col5, col6 = st.columns(2)
+        total_likes = visualise.sql_query(QUERY_KPI_TOTAL_LIKES).iloc[0, 0]
+        total_comments = visualise.sql_query(QUERY_KPI_TOTAL_COMMENTS).iloc[0, 0]
+        
+        with col5:
+             st.metric(label="Total Likes", value=f"{total_likes:,}")
+        with col6:
+             st.metric(label="Total Comments", value=f"{total_comments:,}")
+
+        st.markdown("---")
+
+        # --- Row 2: Analytics ---
+        st.subheader("Data Analytics")
+
+        # Scatter Plot
+        engagement_data = visualise.sql_query(QUERY_ENGAGEMENT_SCATTER)
+        if not engagement_data.empty:
+            fig_scatter = px.scatter(
+                engagement_data, 
+                x="view_count", 
+                y="like_count", 
+                color="channel_name",
+                hover_data=['video_name', 'comment_count'],
+                title="Correlation: Views vs Likes",
+                labels={"view_count": "Views", "like_count": "Likes"}
+            )
+            st.plotly_chart(fig_scatter, use_container_width=True)
+            
+            # Additional Chart: Engagement Rate (Likes + Comments) / Views
+            # Avoid division by zero
+            engagement_data['engagement_rate'] = ((engagement_data['like_count'] + engagement_data['comment_count']) / engagement_data['view_count']) * 100
+            
+            # Avg Engagement Rate per Channel
+            avg_eng_rate = engagement_data.groupby('channel_name')['engagement_rate'].mean().reset_index()
+            
+            fig_bar = px.bar(
+                avg_eng_rate, 
+                x='channel_name', 
+                y='engagement_rate', 
+                color='channel_name',
+                title="Average Engagement Rate per Channel (%)",
+                labels={"channel_name": "Channel", "engagement_rate": "Avg Engagement Rate (%)"}
+            )
+            st.plotly_chart(fig_bar, use_container_width=True)
+
+
+        # Upload Schedule
+        schedule_data = visualise.sql_query(QUERY_UPLOAD_SCHEDULE)
+        if not schedule_data.empty:
+            # Map day numbers to names
+            day_map = {'0': 'Sunday', '1': 'Monday', '2': 'Tuesday', '3': 'Wednesday', '4': 'Thursday', '5': 'Friday', '6': 'Saturday'}
+            schedule_data['day_name'] = schedule_data['day_of_week'].map(day_map)
+            
+            fig_schedule = px.bar(
+                schedule_data, 
+                x='day_name', 
+                y='num_videos',
+                title="Upload Frequency by Day of Week",
+                labels={"day_name": "Day of Week", "num_videos": "Number of Uploads"},
+                category_orders={"day_name": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]}
+            )
+            st.plotly_chart(fig_schedule, use_container_width=True)
 
 
     if selected_tab == 'Tables':
@@ -198,15 +291,7 @@ def main():
 
 
         # Bar chart for the number of videos for each channel
-        query_num_videos = """
-        SELECT c.channel_name, COUNT(*) AS num_videos
-        FROM channels c
-        INNER JOIN videos v ON v.playlist_id = c.playlist_id
-        GROUP BY c.channel_name
-        ORDER BY num_videos DESC
-        LIMIT 10;
-        """
-        result_num_videos = visualise.sql_query(query_num_videos)
+        result_num_videos = visualise.sql_query(QUERY_NUM_VIDEOS)
         st.title('Top chart for the number of videos for each channel')
 
         display_result_top_channels = st.container(border=True)
@@ -233,14 +318,7 @@ def main():
         #88888888888888888888888888'Top 10 most viewed videos'8888888888888888888888888888888888888
 
         # Top 10 most viewed videos
-        query_top_viewed_videos = """
-        SELECT v.video_name, c.channel_name, v.view_count
-        FROM videos v
-        INNER JOIN channels c ON v.playlist_id = c.playlist_id
-        ORDER BY v.view_count DESC
-        LIMIT 10;
-        """
-        result_top_viewed_videos = visualise.sql_query(query_top_viewed_videos)
+        result_top_viewed_videos = visualise.sql_query(QUERY_TOP_VIEWED_VIDEOS)
 
         display_result_top_viewed_videos = st.container(border=True)
         
@@ -262,13 +340,7 @@ def main():
 
 #*********************************** Top 10 channels by subscription count ***********************
         # Top 10 channels by subscription count
-        query_top_channels = """
-        SELECT channel_name, subscription_count
-        FROM channels
-        ORDER BY subscription_count DESC
-        LIMIT 10
-        """
-        result_top_channels = visualise.sql_query(query_top_channels)
+        result_top_channels = visualise.sql_query(QUERY_TOP_CHANNELS_SUBS)
 
         display_box_df_charts = st.container(border=True)
         df_col, charts_col = display_box_df_charts.columns([2, 3])
@@ -301,13 +373,7 @@ def main():
 #*******************************************timeline line chart************************************
         
         # Timeline chart for videos published in 2022
-        query_timeline = """
-        SELECT c.channel_name, strftime('%Y-%m', v.published_at) as month_published
-        FROM channels c 
-        INNER JOIN videos v ON v.playlist_id = c.playlist_id 
-        WHERE v.published_at BETWEEN '2018-01-01 00:00:00' AND '2023-12-31 00:00:00';
-        """
-        result_timeline = visualise.sql_query(query_timeline)
+        result_timeline = visualise.sql_query(QUERY_TIMELINE)
 
         display_result_timeline = st.container(border=True)
 
@@ -338,11 +404,14 @@ def main():
             horizontal= True ,
             index=1  # Default selection index
         )
+        
+        comments_result = None
 
         if query_type == "***Filter data***":
             st.write("You selected Filter data.")
             comments_result = visualise.create_filter_container()
-            st.dataframe(comments_result)
+            if comments_result is not None:
+                st.dataframe(comments_result)
             
 
         elif query_type == "***Enter SQL Query for Comments***":
@@ -350,16 +419,19 @@ def main():
             comments_query = st.text_input("Enter SQL Query for Comments", "SELECT * FROM comments WHERE video_id = 'E-RJbdTJX-4'")
             # Integrate sentiment analysis using transformers pipeline
             comments_result = visualise.sql_query(comments_query)
-            st.dataframe(comments_result)
+            if comments_result is not None:
+                st.dataframe(comments_result)
         else:
             st.write("You didn't select any Query.")
 
         analyse = st.button('Analyse the Sentiment of the selected comments')
 
-        if analyse:
+        if analyse and comments_result is not None and not comments_result.empty:
             # Perform sentiment analysis
             visualise.nlp_analysis(comments_result)
             st.success("Sentiments Analysis Completed.")
+        elif analyse:
+            st.warning("Please select valid comments to analyse.")
 
     # Close connections
     visualise.close_connections()

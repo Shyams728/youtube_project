@@ -8,7 +8,7 @@ pymongo
 google-api-python-client
 isodate
 TensorFlow >= 2.0
-transformers
+# transformers
 transformers[sentencepiece]
 pyngrok
 extra_streamlit_components

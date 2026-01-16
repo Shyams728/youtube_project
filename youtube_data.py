@@ -228,7 +228,7 @@ class YouTubeDataPipeline:
 
     def insert_channel_data(self, document, sqlite_cursor):
         query = """
-            INSERT INTO channels (
+            INSERT OR IGNORE INTO channels (
                 channel_id, channel_name, subscription_count, channel_views,
                 channel_description, playlist_id
             ) VALUES (?, ?, ?, ?, ?, ?)
@@ -245,7 +245,7 @@ class YouTubeDataPipeline:
 
     def insert_video_data(self, document, table_name, sqlite_cursor):
         query = f"""
-            INSERT INTO {table_name} (
+            INSERT OR IGNORE INTO {table_name} (
                 video_id, video_name, video_description, tags,
                 published_at, view_count, like_count, favorite_count,
                 comment_count, duration, caption, thumbnail, playlist_id
@@ -270,7 +270,7 @@ class YouTubeDataPipeline:
 
     def insert_comments_data(self, document, sqlite_cursor):
         query = """
-            INSERT INTO comments (
+            INSERT OR IGNORE INTO comments (
                 comment_Id, video_id, comment_text,
                 comment_author, comment_published_date
             ) VALUES (?, ?, ?, ?, ?)
