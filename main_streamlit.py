@@ -301,7 +301,6 @@ def main():
 
 
     elif selected_tab == 'Visualisation':
-        st.set_option('deprecation.showPyplotGlobalUse', False)
 
 
         # Bar chart for the number of videos for each channel
