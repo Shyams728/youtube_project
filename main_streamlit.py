@@ -5,7 +5,7 @@ import pymongo
 import plotly.express as px
 import isodate
 import datetime
-# from transformers import pipeline
+from transformers import pipeline
 import time
 from extra_streamlit_components import tab_bar,TabBarItemData
 from streamlit_shadcn_ui import table

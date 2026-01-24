@@ -1,7 +1,7 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
-# from transformers import pipeline
+from transformers import pipeline
 import time
 import matplotlib.pyplot as plt
 import os
