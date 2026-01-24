@@ -48,9 +48,19 @@ def main():
 
     st.sidebar.title("CREDENTIALS ")
     st.sidebar.markdown("---")
-    credentials = st.sidebar.button('Use Default Credentials ')
+    
+    # Check if secrets are available to set default value for checkbox
+    has_secrets = False
+    try:
+        if "API_KEY" in st.secrets and "MONGODB_URI" in st.secrets:
+            has_secrets = True
+    except:
+        pass
+
+    use_secrets = st.sidebar.checkbox('Use Default Credentials', value=has_secrets)
     st.sidebar.markdown("---")
-    if not credentials:
+    
+    if not use_secrets:
         st.sidebar.subheader("Youtube API ")
         # Input API key and channel ID
         api_key = st.sidebar.text_input("Enter your YouTube API key:", type='password')
@@ -63,12 +73,15 @@ def main():
         mongodb_collection = st.sidebar.text_input("Enter MongoDB collection name:", "youtube_data")
         st.sidebar.markdown("---")
     else:
-        # Access environment variables
-        mongodb_connection_string = st.secrets["MONGODB_URI"]
-        # mongodb_connection_string = mongodb_connection.replace("'", "")
-        api_key = st.secrets["API_KEY"]
-        mongodb_database = st.secrets["mongodb_database"]
-        mongodb_collection = st.secrets["mongodb_collection"]
+        # Access environment variables from st.secrets
+        try:
+            mongodb_connection_string = st.secrets["MONGODB_URI"]
+            api_key = st.secrets["API_KEY"]
+            mongodb_database = st.secrets.get("mongodb_database", "moonwalker")
+            mongodb_collection = st.secrets.get("mongodb_collection", "youtube_data")
+        except Exception as e:
+            st.sidebar.error("Secrets not found! Please add them to .streamlit/secrets.toml or uncheck 'Use Default Credentials'.")
+            st.stop()
 
     # SQLite path
     sqlite_path = 'youtube_data.sqlite'
